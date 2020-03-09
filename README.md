@@ -18,3 +18,4 @@
    - The idea would be to let you customize default caching strategies or per-request strategies. For example, you might be able to set a request to revalidate on a poll interval or use a "cache-first" mentality or a "stale-while-revalidate" approach.
    - This might be good time to also build in the ability to have your own custom cache.
 - ⬜️ Cache with dynamic keys "hashing". This would be similar to how `react-query` does it—if you pass a string it just uses the string as the cache key, if you pass an array of values it merges all the values into a single request key.
+# rhdf
