@@ -58,7 +58,7 @@ export const useQuery = <T extends unknown>(
   fetcher: () => Promise<T>
 ): QueryResults<T> => {
   const { cache, promises } = useCache()
-  const collectedPromise = React.useRef<string>(false)
+  const collectedPromise = React.useRef<boolean>(false)
 
   const [state, dispatch] = React.useReducer(
     (prevState: State<T>, action: Action<T>): State<T> => {

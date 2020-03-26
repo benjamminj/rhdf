@@ -15,7 +15,8 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test --env=jsdom",
-    "lint": "tsdx lint"
+    "lint": "tsdx lint",
+    "size": "yarn build && size-limit"
   },
   "peerDependencies": {
     "react": ">=16"
@@ -41,8 +42,15 @@
       }
     }
   },
+  "size-limit": [
+    {
+      "path": "dist/index.js",
+      "limit": "1 KB"
+    }
+  ],
   "devDependencies": {
     "@sheerun/mutationobserver-shim": "^0.3.3",
+    "@size-limit/preset-small-lib": "^4.4.1",
     "@testing-library/jest-dom": "^5.2.0",
     "@testing-library/react": "^10.0.1",
     "@testing-library/react-hooks": "^3.2.1",
@@ -53,6 +61,7 @@
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-test-renderer": "^16.13.1",
+    "size-limit": "^4.4.1",
     "tsdx": "^0.12.3",
     "tslib": "^1.11.1",
     "typescript": "^3.8.3"
