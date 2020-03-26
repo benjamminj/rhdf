@@ -49,7 +49,11 @@ export function Posts() {
 
 function PostCount({ id }) {
   const fetchPosts = React.useCallback(() => fetcher(id), [id])
-  const { data: posts, status, error } = useQuery(`users/${id}`, fetchPosts)
+  const { data: posts, status, error } = useQuery(
+    `users/${id}`,
+    fetchPosts,
+    'count'
+  )
 
   return (
     <>
@@ -91,6 +95,7 @@ function PostList({ id }) {
 
 const App = () => {
   const [cache, setCache] = React.useState(defaultCache)
+
   return (
     <CacheContextProvider cache={cache}>
       <Posts />
