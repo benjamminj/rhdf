@@ -154,3 +154,21 @@ describe('useQuery', () => {
     expect(getByText('testdata')).toBeInTheDocument()
   })
 })
+
+describe('mutate', () => {
+  test('should update the value in the cache', () => {
+    const updater = jest.fn().mockResolvedValue('updated')
+  })
+
+  test('should allow fetching a new value', () => {
+    //write your test here
+  })
+
+  test('should allow updating based on the previous cache value', () => {
+    //write your test here
+  })
+
+  test('should allow sending a request with arguments', () => {
+    //write your test here
+  })
+})

@@ -22,5 +22,6 @@
 - ⬜️ Cache with dynamic keys "hashing". This would be similar to how `react-query` does it—if you pass a string it just uses the string as the cache key, if you pass an array of values it merges all the values into a single request key.
 - ⬜️ Retries on errors?
 - ⬜️ Cancel the request if the component unmounts before it completes?
+  - https://medium.com/@bramus/cancel-a-javascript-promise-with-abortcontroller-3540cbbda0a9
 
 # rhdf

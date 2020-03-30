@@ -9,7 +9,7 @@ type QueryResults<T> = {
 
 const createDefaultCache = () => new Map()
 
-export const isServer = () => typeof window === 'undefined'
+export const isServer = typeof window === 'undefined'
 
 export const CacheContext = React.createContext({
   cache: createDefaultCache(),
@@ -144,7 +144,7 @@ export const useQuery = <T extends unknown>(
     // TODO: cancel promise on unmount
   }, [cacheKey, cache, promises, fetchData])
 
-  if (isServer() && !collectedPromise.current) {
+  if (isServer && !collectedPromise.current) {
     collectedPromise.current = true
     promises.set(cacheKey, fetcher())
   }
@@ -152,5 +152,24 @@ export const useQuery = <T extends unknown>(
   return {
     refresh: fetchData,
     ...state,
+  }
+}
+
+export const useMutation = <T extends any>(
+  cacheKey: string,
+  update: (prevData?: T) => T | Promise<T>
+) => {
+  const { cache } = useCache()
+  const prevData: T | undefined = cache.get(cacheKey)
+
+  const mutate = React.useCallback(async () => {
+    const data = await update(prevData)
+    cache.set(cacheKey, data)
+    return data
+  }, [prevData, update])
+
+  return {
+    mutate,
+    status: 'none',
   }
 }
