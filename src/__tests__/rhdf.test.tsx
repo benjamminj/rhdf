@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/extend-expect'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, fireEvent } from '@testing-library/react'
 import React from 'react'
-import { CacheContextProvider, useCache, useQuery } from '../index'
+import { CacheContextProvider, useCache, useQuery, useMutation } from '../index'
 
 // import mutationObserver from '@sheerun/mutationobserver-shim'
 
@@ -156,8 +156,35 @@ describe('useQuery', () => {
 })
 
 describe('mutate', () => {
-  test('should update the value in the cache', () => {
+  test('should update the value in the cache', async () => {
     const updater = jest.fn().mockResolvedValue('updated')
+    const fetcher = jest.fn().mockResolvedValue('original')
+
+    const TestComponent = () => {
+      const a = useQuery<string>('/a', fetcher)
+      const { mutate } = useMutation('/a')
+      return (
+        <div>
+          <p>{a.status === 'loading' && 'loading'}</p>
+          <p>{a.status === 'success' && a.data}</p>
+          <button onClick={() => mutate(updater)}>update</button>
+        </div>
+      )
+    }
+
+    const cache = new Map()
+    const { getByText, findByText } = render(
+      <CacheContextProvider cache={cache}>
+        <TestComponent />
+      </CacheContextProvider>
+    )
+
+    await findByText('original')
+
+    fireEvent.click(getByText('update'))
+
+    await findByText('updated')
+    expect(getByText('updated')).toBeInTheDocument()
   })
 
   test('should allow fetching a new value', () => {

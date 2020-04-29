@@ -13,8 +13,11 @@ export const isServer = typeof window === 'undefined'
 
 export const CacheContext = React.createContext({
   cache: createDefaultCache(),
+  revalidators: new Map(),
   promises: new Map(),
 })
+
+export const RevalidatorContext = React.createContext([{}, () => {}])
 
 export const CacheContextProvider = ({
   children,
@@ -28,6 +31,7 @@ export const CacheContextProvider = ({
   const value = React.useMemo(
     () => ({
       cache,
+      revalidators: new Map(),
       // In right now to allow some intelligent batching / SSR in the future
       // TODO: will need to make promises injectable so that we can flush out all
       // the active promises during SSR
@@ -57,7 +61,7 @@ export const useQuery = <T extends unknown>(
   cacheKey: string,
   fetcher: () => Promise<T>
 ): QueryResults<T> => {
-  const { cache, promises } = useCache()
+  const { cache, revalidators, promises } = useCache()
   const collectedPromise = React.useRef<boolean>(false)
 
   const [state, dispatch] = React.useReducer(
@@ -118,8 +122,14 @@ export const useQuery = <T extends unknown>(
   }, [fetcher, cacheKey, cache])
 
   React.useEffect(() => {
-    // If the data already exists in the cache, then just set it immediately.
+    if (!revalidators.has(cacheKey)) {
+      revalidators.set(cacheKey, () =>
+        dispatch({ type: 'success', data: cache.get(cacheKey) })
+      )
+    }
+
     if (cache.has(cacheKey)) {
+      // If the data already exists in the cache, then just set it immediately.
       return dispatch({ type: 'success', data: cache.get(cacheKey) })
     }
 
@@ -155,18 +165,22 @@ export const useQuery = <T extends unknown>(
   }
 }
 
-export const useMutation = <T extends any>(
-  cacheKey: string,
-  update: (prevData?: T) => T | Promise<T>
-) => {
-  const { cache } = useCache()
+export const useMutation = <T extends any>(cacheKey: string) => {
+  const { cache, revalidators } = useCache()
   const prevData: T | undefined = cache.get(cacheKey)
 
-  const mutate = React.useCallback(async () => {
-    const data = await update(prevData)
-    cache.set(cacheKey, data)
-    return data
-  }, [prevData, update])
+  const mutate = React.useCallback(
+    async update => {
+      const data = await update(prevData)
+      cache.set(cacheKey, data)
+      // somehow we have to trigger revalidation of the query 🤔
+      if (revalidators.has(cacheKey)) {
+        revalidators.get(cacheKey)()
+      }
+      return data
+    },
+    [prevData]
+  )
 
   return {
     mutate,
