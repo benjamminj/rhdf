@@ -169,11 +169,12 @@ export const useMutation = <T extends any>(cacheKey: string) => {
   const { cache, revalidators } = useCache()
   const prevData: T | undefined = cache.get(cacheKey)
 
+  type UpdaterFunction = (data: T) => T
   const mutate = React.useCallback(
-    async update => {
-      const data = await update(prevData)
+    async (update: UpdaterFunction) => {
+      const data = await update(prevData as T)
       cache.set(cacheKey, data)
-      // somehow we have to trigger revalidation of the query 🤔
+
       if (revalidators.has(cacheKey)) {
         revalidators.get(cacheKey)()
       }

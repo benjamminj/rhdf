@@ -227,11 +227,33 @@ describe('mutate', () => {
     expect(fetcher).not.toHaveBeenCalled()
   })
 
-  test('should allow updating based on the previous cache value', () => {
-    //write your test here
-  })
+  test('should allow updating based on the previous cache value', async () => {
+    const fetcher = async () => 0
 
-  test('should allow sending a request with arguments', () => {
-    //write your test here
+    const TestComponent = () => {
+      const a = useQuery<number>('/a', fetcher)
+      const { mutate } = useMutation<number>('/a')
+      return (
+        <div>
+          <p>{a.status === 'loading' && 'loading'}</p>
+          <p>{a.status === 'success' && a.data}</p>
+          <button onClick={() => mutate(prev => prev + 1)}>update</button>
+        </div>
+      )
+    }
+
+    const cache = new Map([['/a', 1]])
+    const { getByText, findByText } = render(
+      <CacheContextProvider cache={cache}>
+        <TestComponent />
+      </CacheContextProvider>
+    )
+
+    await findByText('1')
+
+    fireEvent.click(getByText('update'))
+
+    await findByText('2')
+    expect(getByText('2')).toBeInTheDocument()
   })
 })
