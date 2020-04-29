@@ -1,7 +1,13 @@
 import '@testing-library/jest-dom/extend-expect'
-import { cleanup, render, fireEvent } from '@testing-library/react'
-import React from 'react'
-import { CacheContextProvider, useCache, useQuery, useMutation } from '../index'
+import {
+  cleanup,
+  render,
+  fireEvent,
+  wait,
+  waitFor,
+} from '@testing-library/react'
+import React, { useState } from 'react'
+import { CacheContextProvider, useQuery, useMutation } from '../index'
 
 // import mutationObserver from '@sheerun/mutationobserver-shim'
 
@@ -172,9 +178,8 @@ describe('mutate', () => {
       )
     }
 
-    const cache = new Map()
     const { getByText, findByText } = render(
-      <CacheContextProvider cache={cache}>
+      <CacheContextProvider>
         <TestComponent />
       </CacheContextProvider>
     )
@@ -187,8 +192,39 @@ describe('mutate', () => {
     expect(getByText('updated')).toBeInTheDocument()
   })
 
-  test('should allow fetching a new value', () => {
-    //write your test here
+  test('should allow mutating a new value into the cache', async () => {
+    const updater = jest.fn().mockResolvedValue('updated')
+    const fetcher = jest.fn().mockResolvedValue('original')
+
+    const TestData = () => {
+      const a = useQuery<string>('/a', fetcher)
+      return <div>{a.status === 'success' && a.data}</div>
+    }
+
+    const TestComponent = () => {
+      const { mutate } = useMutation('/a')
+      const [isVisible, setIsVisible] = useState(false)
+      return (
+        <div>
+          <button onClick={() => mutate(updater)}>update</button>
+          <button onClick={() => setIsVisible(true)}>display data</button>
+          {isVisible && <TestData />}
+        </div>
+      )
+    }
+
+    const { getByText } = render(
+      <CacheContextProvider>
+        <TestComponent />
+      </CacheContextProvider>
+    )
+
+    fireEvent.click(getByText('update'))
+    await waitFor(() => expect(updater).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(getByText('display data'))
+    expect(getByText('updated')).toBeInTheDocument()
+    expect(fetcher).not.toHaveBeenCalled()
   })
 
   test('should allow updating based on the previous cache value', () => {
