@@ -1,7 +1,7 @@
 {
   "name": "rhdf",
   "description": "React hooks for data fetching",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "author": "Benjamin Johnson",
   "main": "dist/index.js",
