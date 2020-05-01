@@ -168,7 +168,7 @@ describe('mutate', () => {
 
     const TestComponent = () => {
       const a = useQuery<string>('/a', fetcher)
-      const { mutate } = useMutation('/a')
+      const { mutate } = useMutation({ key: '/a' })
       return (
         <div>
           <p>{a.status === 'loading' && 'loading'}</p>
@@ -202,7 +202,7 @@ describe('mutate', () => {
     }
 
     const TestComponent = () => {
-      const { mutate } = useMutation('/a')
+      const { mutate } = useMutation({ key: '/a' })
       const [isVisible, setIsVisible] = useState(false)
       return (
         <div>
@@ -232,12 +232,14 @@ describe('mutate', () => {
 
     const TestComponent = () => {
       const a = useQuery<number>('/a', fetcher)
-      const { mutate } = useMutation<number>('/a')
+      const { mutate } = useMutation<number>({ key: '/a' })
       return (
         <div>
           <p>{a.status === 'loading' && 'loading'}</p>
           <p>{a.status === 'success' && a.data}</p>
-          <button onClick={() => mutate(prev => prev + 1)}>update</button>
+          <button onClick={() => mutate(prev => (prev ? prev + 1 : undefined))}>
+            update
+          </button>
         </div>
       )
     }

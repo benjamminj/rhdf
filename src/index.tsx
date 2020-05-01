@@ -165,19 +165,29 @@ export const useQuery = <T extends unknown>(
   }
 }
 
-export const useMutation = <T extends any>(cacheKey: string) => {
+export const useMutation = <T extends any>({
+  key: cacheKey,
+  onSuccess,
+}: {
+  onSuccess?: (cachedData: T, cache: Map<any, any>) => void
+  key?: string
+} = {}) => {
   const { cache, revalidators } = useCache()
   const prevData: T | undefined = cache.get(cacheKey)
 
-  type UpdaterFunction = (data: T) => T
+  type UpdaterFunction = (data?: T) => T | Promise<T> | null | Promise<null>
+
   const mutate = React.useCallback(
     async (update: UpdaterFunction) => {
-      const data = await update(prevData as T)
-      cache.set(cacheKey, data)
+      const data = await update(prevData)
+
+      if (cacheKey && data) cache.set(cacheKey, data)
+      if (onSuccess && data) onSuccess(data, cache)
 
       if (revalidators.has(cacheKey)) {
         revalidators.get(cacheKey)()
       }
+
       return data
     },
     [prevData]
