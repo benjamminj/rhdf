@@ -165,13 +165,33 @@ export const useQuery = <T extends unknown>(
   }
 }
 
-export const useMutation = <T extends any>({
-  key: cacheKey,
-  onSuccess,
-}: {
+interface MutationOptions {
   onSuccess?: (cachedData: T, cache: Map<any, any>) => void
-  key?: string
-} = {}) => {
+  // key?: string
+}
+
+type MutationKey = string
+
+interface MutateObject {
+  mutate: (updater: (prev: any) => any) => void
+  status: 'none'
+}
+
+export function useMutation<T extends any>(
+  key: string,
+  optionsObject?: MutationOptions
+): MutateObject
+export function useMutation<T extends any>(
+  optionsObject: MutationOptions & { key?: MutationKey }
+): MutateObject
+export function useMutation<T extends any>(...args: any[]): any | void {
+  // TODO: cleaner way to separate these?
+  const cacheKey = typeof args[0] === 'object' ? args[0].key : args[0]
+  const { onSuccess = () => {} } =
+    typeof args[0] === 'object' ? args[0] : args[1] || {}
+
+  // console.log('CACHE KEY', cache)
+
   const { cache, revalidators } = useCache()
   const prevData: T | undefined = cache.get(cacheKey)
 
