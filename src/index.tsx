@@ -58,11 +58,27 @@ type Action<T extends unknown> =
 type State<T> = Pick<QueryResults<T>, 'status' | 'data' | 'error'>
 
 export const useQuery = <T extends unknown>(
-  cacheKey: string,
+  cacheKey: string | null,
   fetcher: () => Promise<T>
 ): QueryResults<T> => {
   const { cache, revalidators, promises } = useCache()
   const collectedPromise = React.useRef<boolean>(false)
+
+  const getInitialState = (): State<T> => {
+    if (cacheKey === null || !cache.has(cacheKey)) {
+      return {
+        status: 'none',
+        data: null,
+        error: null,
+      }
+    }
+
+    return {
+      status: 'success',
+      data: cache.get(cacheKey),
+      error: null,
+    }
+  }
 
   const [state, dispatch] = React.useReducer(
     (prevState: State<T>, action: Action<T>): State<T> => {
@@ -87,17 +103,7 @@ export const useQuery = <T extends unknown>(
           throw new Error('Invalid reducer key!')
       }
     },
-    cache.has(cacheKey)
-      ? {
-          status: 'success',
-          data: cache.get(cacheKey),
-          error: null,
-        }
-      : {
-          status: 'none',
-          data: null,
-          error: null,
-        }
+    getInitialState()
   )
 
   const fetchData = React.useCallback(async () => {
@@ -122,6 +128,8 @@ export const useQuery = <T extends unknown>(
   }, [fetcher, cacheKey, cache])
 
   React.useEffect(() => {
+    if (cacheKey === null) return
+
     if (!revalidators.has(cacheKey)) {
       revalidators.set(cacheKey, () =>
         dispatch({ type: 'success', data: cache.get(cacheKey) })
@@ -189,8 +197,6 @@ export function useMutation<T extends any>(...args: any[]): any | void {
   const cacheKey = typeof args[0] === 'object' ? args[0].key : args[0]
   const { onSuccess = () => {} } =
     typeof args[0] === 'object' ? args[0] : args[1] || {}
-
-  // console.log('CACHE KEY', cache)
 
   const { cache, revalidators } = useCache()
   const prevData: T | undefined = cache.get(cacheKey)
